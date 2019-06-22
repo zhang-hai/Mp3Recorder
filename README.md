@@ -20,7 +20,7 @@ allprojects {
 
 ```groovy
 dependencies {
-        implementation 'com.github.Dean1990:Mp3Recorder:-SNAPSHOT'
+        implementation 'com.github.zhang-hai:Mp3Recorder:v1.0.0'
 }
 ```
 
