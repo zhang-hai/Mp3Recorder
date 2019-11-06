@@ -20,7 +20,7 @@ public class Mp3Recorder {
         System.loadLibrary("mp3lame");
     }
 
-    private static final int DEFAULT_SAMPLING_RATE = 22050;
+    private static final int DEFAULT_SAMPLING_RATE = 44100;
 
     private static final int FRAME_COUNT = 160;
 
@@ -49,6 +49,22 @@ public class Mp3Recorder {
 
     private boolean isRecording = false;
 
+    /**
+     *
+     * @param samplingRate the sample rate expressed in Hertz. 44100Hz is currently the only
+      *   rate that is guaranteed to work on all devices, but other rates such as 22050,
+      *   16000, and 11025 may work on some devices.
+      *   {@link AudioFormat#SAMPLE_RATE_UNSPECIFIED} means to use a route-dependent value
+      *   which is usually the sample rate of the source.
+      *   {@link AudioRecord#getSampleRate()} can be used to retrieve the actual sample rate chosen.
+      * @param channelConfig describes the configuration of the audio channels.
+     *   See {@link AudioFormat#CHANNEL_IN_MONO} and
+     *   {@link AudioFormat#CHANNEL_IN_STEREO}.  {@link AudioFormat#CHANNEL_IN_MONO} is guaranteed
+     *   to work on all devices.
+     * @param audioFormat the format in which the audio data is to be returned.
+     *   See {@link AudioFormat#ENCODING_PCM_8BIT}, {@link AudioFormat#ENCODING_PCM_16BIT},
+     *   and {@link AudioFormat#ENCODING_PCM_FLOAT}.
+     */
     public Mp3Recorder(int samplingRate, int channelConfig,
                        PCMFormat audioFormat) {
         this.samplingRate = samplingRate;
@@ -211,6 +227,18 @@ public class Mp3Recorder {
         encodeThread.start();
         audioRecord.setRecordPositionUpdateListener(encodeThread, encodeThread.getHandler());
         audioRecord.setPositionNotificationPeriod(FRAME_COUNT);
+    }
+
+    /**
+     * 检查设备是否支持指定的音频采样率
+     */
+    private void invalidSampleRates() {
+        for (int rate : new int[] {8000, 11025, 16000, 22050, 44100}) {  // add the rates you wish to check against
+            int bufferSize = AudioRecord.getMinBufferSize(rate, AudioFormat.CHANNEL_CONFIGURATION_DEFAULT, AudioFormat.ENCODING_PCM_16BIT);
+            if (bufferSize > 0) {
+                // buffer size is valid, Sample rate supported
+            }
+        }
     }
 
     public interface OnRecordListener {

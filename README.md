@@ -20,7 +20,7 @@ allprojects {
 
 ```groovy
 dependencies {
-        implementation 'com.github.zhang-hai:Mp3Recorder:v1.0.4'
+        implementation 'com.github.zhang-hai:Mp3Recorder:v1.0.5'
 }
 ```
 
@@ -75,3 +75,5 @@ if (mRecorder!=null && mRecorder.isRecording()){
 }
 ```
 
+#### 版本更新
+v1.0.5 设置默认音频采样率未44100Hz,因为Android要求所有设备都要支持该采样率，其他采样率不一定。
