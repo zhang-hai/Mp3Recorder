@@ -40,21 +40,21 @@ public class SimpleLame {
 	/**
 	 * Initialize LAME.
 	 * 
-	 * @param inSamplerate input sample rate in Hz.
+	 * @param inSampleRate input sample rate in Hz.
 	 * @param outChannel number of channels in input stream.
-	 * @param outSamplerate output sample rate in Hz.
+	 * @param outSampleRate output sample rate in Hz.
 	 * @param outBitrate brate compression ratio in KHz.
 	 */
-	public static void init(int inSamplerate, int outChannel, int outSamplerate, int outBitrate) {
-		init(inSamplerate, outChannel, outSamplerate, outBitrate, 7);
+	public static void init(int inSampleRate, int outChannel, int outSampleRate, int outBitrate) {
+		init(inSampleRate, outChannel, outSampleRate, outBitrate, 7);
 	}
 	
 	/**
 	 * Initialize LAME.
 	 * 
-	 * @param inSamplerate input sample rate in Hz.
+	 * @param inSampleRate input sample rate in Hz.
 	 * @param outChannel number of channels in input stream.
-	 * @param outSamplerate output sample rate in Hz.
+	 * @param outSampleRate output sample rate in Hz.
 	 * @param outBitrate brate compression ratio in KHz.
 	 * @param quality
 	 *            quality=0..9. 0=best (very slow). 9=worst.<br />
@@ -63,5 +63,5 @@ public class SimpleLame {
 	 *            5 good quality, fast<br />
 	 *            7 ok quality, really fast
 	 */
-	public native static void init(int inSamplerate, int outChannel, int outSamplerate, int outBitrate, int quality);
+	public native static void init(int inSampleRate, int outChannel, int outSampleRate, int outBitrate, int quality);
 }

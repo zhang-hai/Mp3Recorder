@@ -21,6 +21,7 @@ public class Mp3Recorder {
     }
 
     private static final int DEFAULT_SAMPLING_RATE = 44100;
+    private static final int DEFAULT_OUT_SAMPLING_RATE = 22050;
 
     private static final int FRAME_COUNT = 160;
 
@@ -41,7 +42,7 @@ public class Mp3Recorder {
 
     private DataEncodeThread encodeThread;
 
-    private int samplingRate;
+    private int sampleRateInHz;
 
     private int channelConfig;
 
@@ -51,7 +52,7 @@ public class Mp3Recorder {
 
     /**
      *
-     * @param samplingRate the sample rate expressed in Hertz. 44100Hz is currently the only
+     * @param sampleRateInHz the sample rate expressed in Hertz. 44100Hz is currently the only
       *   rate that is guaranteed to work on all devices, but other rates such as 22050,
       *   16000, and 11025 may work on some devices.
       *   {@link AudioFormat#SAMPLE_RATE_UNSPECIFIED} means to use a route-dependent value
@@ -65,9 +66,9 @@ public class Mp3Recorder {
      *   See {@link AudioFormat#ENCODING_PCM_8BIT}, {@link AudioFormat#ENCODING_PCM_16BIT},
      *   and {@link AudioFormat#ENCODING_PCM_FLOAT}.
      */
-    public Mp3Recorder(int samplingRate, int channelConfig,
+    public Mp3Recorder(int sampleRateInHz, int channelConfig,
                        PCMFormat audioFormat) {
-        this.samplingRate = samplingRate;
+        this.sampleRateInHz = sampleRateInHz;
         this.channelConfig = channelConfig;
         this.audioFormat = audioFormat;
     }
@@ -190,7 +191,7 @@ public class Mp3Recorder {
         int bytesPerFrame = audioFormat.getBytesPerFrame();
 		/* Get number of samples. Calculate the buffer size (round up to the
 		   factor of given frame size) */
-        int frameSize = AudioRecord.getMinBufferSize(samplingRate,
+        int frameSize = AudioRecord.getMinBufferSize(sampleRateInHz,
                 channelConfig, audioFormat.getAudioFormat()) / bytesPerFrame;
         if (frameSize % FRAME_COUNT != 0) {
             frameSize = frameSize + (FRAME_COUNT - frameSize % FRAME_COUNT);
@@ -201,7 +202,7 @@ public class Mp3Recorder {
 
         /* Setup audio recorder */
         audioRecord = new AudioRecord(MediaRecorder.AudioSource.VOICE_COMMUNICATION,
-                samplingRate, channelConfig, audioFormat.getAudioFormat(),
+                sampleRateInHz, channelConfig, audioFormat.getAudioFormat(),
                 bufferSize);
 
         // Setup RingBuffer. Currently is 10 times size of hardware buffer
@@ -212,7 +213,9 @@ public class Mp3Recorder {
         // Initialize lame buffer
         // mp3 sampling rate is the same as the recorded pcm sampling rate
         // The bit rate is 32kbps
-        SimpleLame.init(samplingRate, 1, samplingRate, BIT_RATE);
+        // TODO:输入输出采样率一致时会有杂音，故此处将输入输出采样率设置不一样来解决噪音问题。
+        //  必须都是双通道，还要就是查资料的时候说的是采样率必须一致，但此处相同采样率时，出现噪音问题，不知何原因
+        SimpleLame.init(sampleRateInHz, 1, DEFAULT_OUT_SAMPLING_RATE, BIT_RATE);
 
         // Initialize the place to put mp3 file
 //		String externalPath = Environment.getExternalStorageDirectory()
