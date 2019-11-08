@@ -213,9 +213,7 @@ public class Mp3Recorder {
         // Initialize lame buffer
         // mp3 sampling rate is the same as the recorded pcm sampling rate
         // The bit rate is 32kbps
-        // TODO:输入输出采样率一致时会有杂音，故此处将输入输出采样率设置不一样来解决噪音问题。
-        //  必须都是双通道，还要就是查资料的时候说的是采样率必须一致，但此处相同采样率时，出现噪音问题，不知何原因
-        SimpleLame.init(sampleRateInHz, 1, DEFAULT_OUT_SAMPLING_RATE, BIT_RATE);
+        SimpleLame.init(sampleRateInHz, 1, sampleRateInHz, BIT_RATE);
 
         // Initialize the place to put mp3 file
 //		String externalPath = Environment.getExternalStorageDirectory()
