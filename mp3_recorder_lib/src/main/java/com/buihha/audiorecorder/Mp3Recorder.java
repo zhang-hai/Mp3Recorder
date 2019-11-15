@@ -20,8 +20,7 @@ public class Mp3Recorder {
         System.loadLibrary("mp3lame");
     }
 
-    private static final int DEFAULT_SAMPLING_RATE = 44100;
-    private static final int DEFAULT_OUT_SAMPLING_RATE = 22050;
+    private static final int DEFAULT_SAMPLING_RATE = 16000;
 
     private static final int FRAME_COUNT = 160;
 
@@ -201,7 +200,7 @@ public class Mp3Recorder {
         bufferSize = frameSize * bytesPerFrame;
 
         /* Setup audio recorder */
-        audioRecord = new AudioRecord(MediaRecorder.AudioSource.VOICE_COMMUNICATION,
+        audioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC,
                 sampleRateInHz, channelConfig, audioFormat.getAudioFormat(),
                 bufferSize);
 
