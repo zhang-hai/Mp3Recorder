@@ -27,6 +27,6 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     implementation 'com.android.support:appcompat-v7:27.1.1'
 
-//    implementation 'com.github.zhang-hai:Mp3Recorder:1.0.4'
+//    implementation 'com.github.zhang-hai:Mp3Recorder:1.0.8'
     implementation project(':mp3_recorder_lib')
 }
