@@ -47,7 +47,7 @@ public class Mp3Recorder {
 
     private PCMFormat audioFormat;
 
-    private boolean isRecording = false;
+    private volatile boolean isRecording = false;
 
     public Mp3Recorder(int samplingRate, int channelConfig,
                        PCMFormat audioFormat) {
@@ -78,7 +78,9 @@ public class Mp3Recorder {
      * @throws IOException
      */
     public void startRecording(String dir, String name) throws IOException {
-        if (isRecording) return;
+        if (isRecording) {
+            return;
+        }
         Log.d(TAG, "Start recording");
         Log.d(TAG, "BufferSize = " + bufferSize);
         // Initialize audioRecord if it's null.
@@ -98,8 +100,9 @@ public class Mp3Recorder {
             initAudioRecorder();
         }
         audioRecord.startRecording();
-        if (mListener != null)
+        if (mListener != null) {
             mListener.onStart();
+        }
 
         new Thread() {
 
@@ -119,8 +122,9 @@ public class Mp3Recorder {
                         double mean = v / (double) bytes;
                         double volume = 10 * Math.log10(mean);
                         Log.d(TAG, "分贝值:" + volume);
-                        if (mListener != null)
-                            mListener.onRecording(audioRecord.getSampleRate(),volume);
+                        if (mListener != null) {
+                            mListener.onRecording(audioRecord.getSampleRate(), volume);
+                        }
                         ringBuffer.write(buffer, bytes);
                     }
                 }
@@ -130,8 +134,9 @@ public class Mp3Recorder {
                     audioRecord.stop();
                     audioRecord.release();
                     audioRecord = null;
-                    if (mListener != null)
+                    if (mListener != null) {
                         mListener.onStop();
+                    }
 
                     // stop the encoding thread and try to wait
                     // until the thread finishes its job
@@ -144,10 +149,20 @@ public class Mp3Recorder {
                     Log.d(TAG, "done encoding thread");
                 } catch (InterruptedException e) {
                     Log.d(TAG, "Faile to join encode thread");
+                    if(mListener!=null){
+                        mListener.onError(e);
+                    }
+                }catch (Exception e){
+                    if(mListener!=null){
+                        mListener.onError(e);
+                    }
                 } finally {
                     if (os != null) {
                         try {
                             os.close();
+                            if(mListener!=null){
+                                mListener.onCompleted(mp3File);
+                            }
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
@@ -219,6 +234,10 @@ public class Mp3Recorder {
         void onStop();
 
         void onRecording(int sampleRate,double volume);//采样率和音量（分贝）
+
+        void onError(Exception e);
+
+        void onCompleted(File file);
     }
 
     public void setOnRecordListener(OnRecordListener listener) {
