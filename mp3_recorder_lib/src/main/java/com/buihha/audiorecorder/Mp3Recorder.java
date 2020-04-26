@@ -6,6 +6,12 @@ import android.media.MediaRecorder;
 import android.os.Message;
 import android.util.Log;
 
+import com.buihha.audiorecorder.other.RecordConfig;
+import com.buihha.audiorecorder.other.RecordHelper;
+import com.buihha.audiorecorder.other.listener.RecordResultListener;
+import com.buihha.audiorecorder.other.listener.RecordSoundSizeListener;
+import com.buihha.audiorecorder.other.listener.RecordStateListener;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -15,10 +21,6 @@ public class Mp3Recorder {
     private static final String TAG = Mp3Recorder.class.getSimpleName();
 
     OnRecordListener mListener;
-
-    static {
-        System.loadLibrary("mp3lame");
-    }
 
     private static final int DEFAULT_SAMPLING_RATE = 16000;
 
@@ -82,7 +84,7 @@ public class Mp3Recorder {
     }
 
     public boolean isRecording() {
-
+        isRecording = RecordHelper.getInstance().isRecording();
         return isRecording;
 
     }
@@ -94,84 +96,122 @@ public class Mp3Recorder {
      * @throws IOException
      */
     public void startRecording(String dir, String name) throws IOException {
-        if (isRecording) return;
-        Log.d(TAG, "Start recording");
-        Log.d(TAG, "BufferSize = " + bufferSize);
-        // Initialize audioRecord if it's null.
-        if (audioRecord == null) {
-
-            File directory = new File(dir);
-            if (!directory.exists()) {
-                directory.mkdirs();
-                Log.d(TAG, "Created directory");
+        RecordHelper.getInstance().setRecordStateListener(new RecordStateListener() {
+            @Override
+            public void onStateChange(RecordHelper.RecordState state) {
+                if (mListener != null){
+                    if(state == RecordHelper.RecordState.RECORDING){
+                        mListener.onStart();
+                    }
+                }
             }
-
-            mp3File = new File(directory, name);
-            if(mp3File.exists()){//文件存在则删除
-                mp3File.delete();
-            }
-
-            initAudioRecorder();
-        }
-        audioRecord.startRecording();
-        if (mListener != null)
-            mListener.onStart();
-
-        new Thread() {
 
             @Override
-            public void run() {
-                isRecording = true;
-                while (isRecording) {
-                    //bytes是实际读取的数据长度，一般而言bytes会小于buffersize
-                    int bytes = audioRecord.read(buffer, 0, bufferSize);
-                    if (bytes > 0) {
-                        long v = 0;
-                        // 将 buffer 内容取出，进行平方和运算
-                        for (int i = 0; i < buffer.length; i++) {
-                            v += buffer[i] * buffer[i];
-                        }
-                        //平方和除以数据总长度，得到音量大小。
-                        double mean = v / (double) bytes;
-                        double volume = 10 * Math.log10(mean);
-                        Log.d(TAG, "分贝值:" + volume);
-                        if (mListener != null)
-                            mListener.onRecording(audioRecord.getSampleRate(),volume);
-                        ringBuffer.write(buffer, bytes);
-                    }
-                }
-
-                // release and finalize audioRecord
-                try {
-                    audioRecord.stop();
-                    audioRecord.release();
-                    audioRecord = null;
-                    if (mListener != null)
-                        mListener.onStop();
-
-                    // stop the encoding thread and try to wait
-                    // until the thread finishes its job
-                    Message msg = Message.obtain(encodeThread.getHandler(),
-                            DataEncodeThread.PROCESS_STOP);
-                    msg.sendToTarget();
-
-                    Log.d(TAG, "waiting for encoding thread");
-                    encodeThread.join();
-                    Log.d(TAG, "done encoding thread");
-                } catch (InterruptedException e) {
-                    Log.d(TAG, "Faile to join encode thread");
-                } finally {
-                    if (os != null) {
-                        try {
-                            os.close();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
+            public void onError(String error) {
 
             }
-        }.start();
+        });
+        RecordHelper.getInstance().setRecordResultListener(new RecordResultListener() {
+            @Override
+            public void onResult(File result) {
+                //结束录音
+                if(result == null) return;
+                mp3File = result;
+                if(mListener != null){
+                    mListener.onStop();
+                }
+            }
+        });
+        final RecordConfig config = new RecordConfig();
+        RecordHelper.getInstance().setRecordSoundSizeListener(new RecordSoundSizeListener() {
+            @Override
+            public void onSoundSize(int soundSize) {
+                if(mListener != null){
+                    mListener.onRecording(config.getSampleRate(),soundSize);
+                }
+            }
+        });
+
+        config.setRecordDir(dir);
+        RecordHelper.getInstance().start(new File(dir,name).getAbsolutePath(),config);
+//        if (isRecording) return;
+//        Log.d(TAG, "Start recording");
+//        Log.d(TAG, "BufferSize = " + bufferSize);
+//        // Initialize audioRecord if it's null.
+//        if (audioRecord == null) {
+//
+//            File directory = new File(dir);
+//            if (!directory.exists()) {
+//                directory.mkdirs();
+//                Log.d(TAG, "Created directory");
+//            }
+//
+//            mp3File = new File(directory, name);
+//            if(mp3File.exists()){//文件存在则删除
+//                mp3File.delete();
+//            }
+//
+//            initAudioRecorder();
+//        }
+//        audioRecord.startRecording();
+//        if (mListener != null)
+//            mListener.onStart();
+//
+//        new Thread() {
+//
+//            @Override
+//            public void run() {
+//                isRecording = true;
+//                while (isRecording) {
+//                    //bytes是实际读取的数据长度，一般而言bytes会小于buffersize
+//                    int bytes = audioRecord.read(buffer, 0, bufferSize);
+//                    if (bytes > 0) {
+//                        long v = 0;
+//                        // 将 buffer 内容取出，进行平方和运算
+//                        for (int i = 0; i < buffer.length; i++) {
+//                            v += buffer[i] * buffer[i];
+//                        }
+//                        //平方和除以数据总长度，得到音量大小。
+//                        double mean = v / (double) bytes;
+//                        double volume = 10 * Math.log10(mean);
+//                        Log.d(TAG, "分贝值:" + volume);
+//                        if (mListener != null)
+//                            mListener.onRecording(audioRecord.getSampleRate(),volume);
+//                        ringBuffer.write(buffer, bytes);
+//                    }
+//                }
+//
+//                // release and finalize audioRecord
+//                try {
+//                    audioRecord.stop();
+//                    audioRecord.release();
+//                    audioRecord = null;
+//                    if (mListener != null)
+//                        mListener.onStop();
+//
+//                    // stop the encoding thread and try to wait
+//                    // until the thread finishes its job
+//                    Message msg = Message.obtain(encodeThread.getHandler(),
+//                            DataEncodeThread.PROCESS_STOP);
+//                    msg.sendToTarget();
+//
+//                    Log.d(TAG, "waiting for encoding thread");
+//                    encodeThread.join();
+//                    Log.d(TAG, "done encoding thread");
+//                } catch (InterruptedException e) {
+//                    Log.d(TAG, "Faile to join encode thread");
+//                } finally {
+//                    if (os != null) {
+//                        try {
+//                            os.close();
+//                        } catch (IOException e) {
+//                            e.printStackTrace();
+//                        }
+//                    }
+//                }
+//
+//            }
+//        }.start();
     }
 
     /**
@@ -181,6 +221,7 @@ public class Mp3Recorder {
     public void stopRecording() {
         Log.d(TAG, "stop recording");
         isRecording = false;
+        RecordHelper.getInstance().stop();
     }
 
     /**

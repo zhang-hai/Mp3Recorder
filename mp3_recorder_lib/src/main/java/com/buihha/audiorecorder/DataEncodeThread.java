@@ -13,6 +13,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.concurrent.CountDownLatch;
 
+
 public class DataEncodeThread extends Thread implements AudioRecord.OnRecordPositionUpdateListener {
 
 	private static final String TAG = DataEncodeThread.class.getSimpleName();

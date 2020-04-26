@@ -1,7 +1,7 @@
 # Mp3Recorder
 录音mp3格式（lame 采用边录边转码方式）
 
-窃来的，忘记几年前从哪里找到的代码，好几个项目都用，很方便，提取出来形成引用包
+窃来的，好几个项目都用，很方便，提取出来形成引用包
 
 #### 引用
 
@@ -20,7 +20,7 @@ allprojects {
 
 ```groovy
 dependencies {
-        implementation 'com.github.zhang-hai:Mp3Recorder:1.0.8'
+        implementation 'com.github.zhang-hai:Mp3Recorder:1.0.9'
 }
 ```
 
@@ -79,3 +79,4 @@ if (mRecorder!=null && mRecorder.isRecording()){
 v1.0.5 设置默认音频采样率未44100Hz,因为Android要求所有设备都要支持该采样率，其他采样率不一定。
 v1.0.7
 v1.0.8 修改初始化AudioRecord对象是参数AudioSource类型，解决录音文件有噪音的问题
+v1.0.9 修复转码读取pcm数据未对short转化成byte进行转换，造成出现音频中偶尔刺啦声问题；

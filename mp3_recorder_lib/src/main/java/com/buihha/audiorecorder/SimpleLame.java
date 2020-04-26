@@ -4,6 +4,10 @@ package com.buihha.audiorecorder;
  * LAME interface class
  */
 public class SimpleLame {
+
+	static {
+		System.loadLibrary("mp3lame");
+	}
 	
 	/**
 	 * Close LAME.
