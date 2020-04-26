@@ -77,7 +77,10 @@ if (mRecorder!=null && mRecorder.isRecording()){
 
 #### 版本更新
 v1.0.5 设置默认音频采样率未44100Hz,因为Android要求所有设备都要支持该采样率，其他采样率不一定。
+
 v1.0.7
-v1.0.8 修改初始化AudioRecord对象是参数AudioSource类型，解决录音文件有噪音的问题
+
+v1.0.8 修改初始化AudioRecord对象是参数AudioSource类型，解决录音文件有噪音的问题;
+
 v1.0.9 修复转码读取pcm数据未对short转化成byte进行转换，造成出现音频中偶尔刺啦声问题；
 
