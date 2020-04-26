@@ -134,7 +134,7 @@ public class Mp3Recorder {
         });
 
         config.setRecordDir(dir);
-        RecordHelper.getInstance().start(new File(dir,name).getAbsolutePath(),config);
+        RecordHelper.getInstance().start(mp3File.getAbsolutePath(),config);
 //        if (isRecording) return;
 //        Log.d(TAG, "Start recording");
 //        Log.d(TAG, "BufferSize = " + bufferSize);
