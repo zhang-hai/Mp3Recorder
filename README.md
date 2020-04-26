@@ -20,7 +20,7 @@ allprojects {
 
 ```groovy
 dependencies {
-        implementation 'com.github.zhang-hai:Mp3Recorder:1.0.9'
+        implementation 'com.github.zhang-hai:Mp3Recorder:1.0.10'
 }
 ```
 
@@ -84,3 +84,4 @@ v1.0.8 修改初始化AudioRecord对象是参数AudioSource类型，解决录音
 
 v1.0.9 修复转码读取pcm数据未对short转化成byte进行转换，造成出现音频中偶尔刺啦声问题；
 
+v1.0.10 开启录音时，提前把mp3File对象构造出来

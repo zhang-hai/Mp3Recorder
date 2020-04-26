@@ -96,6 +96,7 @@ public class Mp3Recorder {
      * @throws IOException
      */
     public void startRecording(String dir, String name) throws IOException {
+        mp3File = new File(dir, name);
         RecordHelper.getInstance().setRecordStateListener(new RecordStateListener() {
             @Override
             public void onStateChange(RecordHelper.RecordState state) {

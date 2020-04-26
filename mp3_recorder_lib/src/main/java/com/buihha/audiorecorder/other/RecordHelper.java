@@ -470,7 +470,8 @@ public class RecordHelper {
      * 实例 record_20160101_13_15_12
      */
     private String getTempFilePath() {
-        String fileDir = String.format(Locale.getDefault(), "%s/Record/", Environment.getExternalStorageDirectory().getAbsolutePath());
+//        String fileDir = String.format(Locale.getDefault(), "%s/Record/", Environment.getExternalStorageDirectory().getAbsolutePath());
+        String fileDir = this.currentConfig != null ? this.currentConfig.getRecordDir() : String.format(Locale.getDefault(), "%s/Record/", Environment.getExternalStorageDirectory().getAbsolutePath());
         if (!FileUtils.createOrExistsDir(fileDir)) {
             Logger.e(TAG, "文件夹创建失败：%s", fileDir);
         }
