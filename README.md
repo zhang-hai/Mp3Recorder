@@ -50,6 +50,12 @@ if (mRecorder == null) {
 		public void onStop() {
 			//停止录音
 		}
+
+		@Override
+		public void onError(){
+		    //录音错误，主要针对OPPO手机在调用startRecord方法时弹窗安全权限提示，此时如果拒绝，则会执行该回调
+
+		}
 		
 		@Override
                 public void onRecording(int i, double v) {
