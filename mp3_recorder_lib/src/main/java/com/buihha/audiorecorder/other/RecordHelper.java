@@ -35,6 +35,7 @@ public class RecordHelper {
     private static final String TAG = RecordHelper.class.getSimpleName();
     private volatile static RecordHelper instance;
     private volatile RecordState state = RecordState.IDLE;
+    private volatile boolean mBeginStart = false;     //是否录音准备开始
     private static final int RECORD_AUDIO_BUFFER_TIMES = 1;
 
     private RecordStateListener recordStateListener;
@@ -182,7 +183,11 @@ public class RecordHelper {
 
     private void notifyFinish() {
         Logger.d(TAG, "录音结束 file: %s", resultFile.getAbsolutePath());
-
+        //若是错误的state则直接返回
+        if (state == RecordState.ERROR){
+            state = RecordState.IDLE;
+            return;
+        }
         mainHandler.post(new Runnable() {
             @Override
             public void run() {
@@ -293,7 +298,7 @@ public class RecordHelper {
 
         private void startPcmRecorder() {
             state = RecordState.RECORDING;
-            notifyState();
+//            notifyState();
             Logger.d(TAG, "开始录制 Pcm");
             FileOutputStream fos = null;
             try {
@@ -303,9 +308,20 @@ public class RecordHelper {
 
                 while (state == RecordState.RECORDING) {
                     int end = audioRecord.read(byteBuffer, 0, byteBuffer.length);
-                    notifyData(byteBuffer);
-                    fos.write(byteBuffer, 0, end);
-                    fos.flush();
+                    if (end > 0){
+                        //第一次读取数据时发送一个录音开始的通知
+                        if (!mBeginStart) {
+                            mBeginStart = true;
+                            notifyState();
+                        }
+                        //处理后续逻辑
+                        notifyData(byteBuffer);
+                        fos.write(byteBuffer, 0, end);
+                        fos.flush();
+                    }else {
+                        state = RecordState.ERROR;
+                        break;
+                    }
                 }
                 audioRecord.stop();
                 files.add(tmpFile);
@@ -327,15 +343,20 @@ public class RecordHelper {
                 }
             }
             if (state != RecordState.PAUSE) {
-                state = RecordState.IDLE;
-                notifyState();
+                if (state == RecordState.ERROR){
+                    notifyError("录音失败");
+                    state = RecordState.IDLE;
+                }else {
+                    state = RecordState.IDLE;
+                    notifyState();
+                }
                 Logger.d(TAG, "录音结束");
             }
         }
 
         private void startMp3Recorder() {
             state = RecordState.RECORDING;
-            notifyState();
+//            notifyState();
 
             try {
                 audioRecord.startRecording();
@@ -343,10 +364,23 @@ public class RecordHelper {
 
                 while (state == RecordState.RECORDING) {
                     int end = audioRecord.read(byteBuffer, 0, byteBuffer.length);
-                    if (mp3EncodeThread != null) {
-                        mp3EncodeThread.addChangeBuffer(new Mp3EncodeThread.ChangeBuffer(byteBuffer, end));
+
+                    //数据非0则为正常录音
+                    if (end > 0){
+                        //第一次读取数据时发送一个录音开始的通知
+                        if (!mBeginStart) {
+                            mBeginStart = true;
+                            notifyState();
+                        }
+                        //处理后续解码操作
+                        if (mp3EncodeThread != null) {
+                            mp3EncodeThread.addChangeBuffer(new Mp3EncodeThread.ChangeBuffer(byteBuffer, end));
+                        }
+                        notifyData(ByteUtils.toBytes(byteBuffer));
+                    }else {
+                        state = RecordState.ERROR;
+                        break;
                     }
-                    notifyData(ByteUtils.toBytes(byteBuffer));
                 }
                 audioRecord.stop();
             } catch (Exception e) {
@@ -354,8 +388,12 @@ public class RecordHelper {
                 notifyError("录音失败");
             }
             if (state != RecordState.PAUSE) {
-                state = RecordState.IDLE;
-                notifyState();
+                if (state == RecordState.ERROR){
+                    notifyError("录音失败");
+                }else {
+                    state = RecordState.IDLE;
+                    notifyState();
+                }
                 stopMp3Encoded();
             } else {
                 Logger.d(TAG, "暂停");
@@ -502,7 +540,11 @@ public class RecordHelper {
         /**
          * 录音流程结束（转换结束）
          */
-        FINISH
+        FINISH,
+        /**
+         * 录音错误
+         */
+        ERROR
     }
 
 }

@@ -109,7 +109,11 @@ public class Mp3Recorder {
 
             @Override
             public void onError(String error) {
-
+                Log.d("Mp3Recorder","onError----->"+error);
+                isRecording = false;
+                if (mListener != null){
+                    mListener.onError();
+                }
             }
         });
         RecordHelper.getInstance().setRecordResultListener(new RecordResultListener() {
@@ -135,84 +139,6 @@ public class Mp3Recorder {
 
         config.setRecordDir(dir);
         RecordHelper.getInstance().start(mp3File.getAbsolutePath(),config);
-//        if (isRecording) return;
-//        Log.d(TAG, "Start recording");
-//        Log.d(TAG, "BufferSize = " + bufferSize);
-//        // Initialize audioRecord if it's null.
-//        if (audioRecord == null) {
-//
-//            File directory = new File(dir);
-//            if (!directory.exists()) {
-//                directory.mkdirs();
-//                Log.d(TAG, "Created directory");
-//            }
-//
-//            mp3File = new File(directory, name);
-//            if(mp3File.exists()){//文件存在则删除
-//                mp3File.delete();
-//            }
-//
-//            initAudioRecorder();
-//        }
-//        audioRecord.startRecording();
-//        if (mListener != null)
-//            mListener.onStart();
-//
-//        new Thread() {
-//
-//            @Override
-//            public void run() {
-//                isRecording = true;
-//                while (isRecording) {
-//                    //bytes是实际读取的数据长度，一般而言bytes会小于buffersize
-//                    int bytes = audioRecord.read(buffer, 0, bufferSize);
-//                    if (bytes > 0) {
-//                        long v = 0;
-//                        // 将 buffer 内容取出，进行平方和运算
-//                        for (int i = 0; i < buffer.length; i++) {
-//                            v += buffer[i] * buffer[i];
-//                        }
-//                        //平方和除以数据总长度，得到音量大小。
-//                        double mean = v / (double) bytes;
-//                        double volume = 10 * Math.log10(mean);
-//                        Log.d(TAG, "分贝值:" + volume);
-//                        if (mListener != null)
-//                            mListener.onRecording(audioRecord.getSampleRate(),volume);
-//                        ringBuffer.write(buffer, bytes);
-//                    }
-//                }
-//
-//                // release and finalize audioRecord
-//                try {
-//                    audioRecord.stop();
-//                    audioRecord.release();
-//                    audioRecord = null;
-//                    if (mListener != null)
-//                        mListener.onStop();
-//
-//                    // stop the encoding thread and try to wait
-//                    // until the thread finishes its job
-//                    Message msg = Message.obtain(encodeThread.getHandler(),
-//                            DataEncodeThread.PROCESS_STOP);
-//                    msg.sendToTarget();
-//
-//                    Log.d(TAG, "waiting for encoding thread");
-//                    encodeThread.join();
-//                    Log.d(TAG, "done encoding thread");
-//                } catch (InterruptedException e) {
-//                    Log.d(TAG, "Faile to join encode thread");
-//                } finally {
-//                    if (os != null) {
-//                        try {
-//                            os.close();
-//                        } catch (IOException e) {
-//                            e.printStackTrace();
-//                        }
-//                    }
-//                }
-//
-//            }
-//        }.start();
     }
 
     /**
@@ -289,6 +215,8 @@ public class Mp3Recorder {
         void onStop();
 
         void onRecording(int sampleRate,double volume);//采样率和音量（分贝）
+
+        void onError();
     }
 
     public void setOnRecordListener(OnRecordListener listener) {

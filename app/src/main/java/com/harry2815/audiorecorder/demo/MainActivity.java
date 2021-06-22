@@ -1,7 +1,9 @@
 package com.harry2815.audiorecorder.demo;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.pm.PackageManager;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.Bundle;
@@ -100,6 +102,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 @Override
                 public void onStart() {
                     //开始录音
+                    Log.d("MainActivity","开始录音--------->>>");
+                }
+
+                @Override
+                public void onError() {
+                    Log.d("MainActivity","录音--------->>>onError");
+                    btn_recorder.setText("开始录音");
+                    isRecording = false;
                 }
 
                 @Override
@@ -180,15 +190,40 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     //检查是否有相应权限
     private boolean checkPermission(){
-        return PermissionChecker.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
-                && PermissionChecker.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
-                && PermissionChecker.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+        return selfPermissionGranted(Manifest.permission.RECORD_AUDIO)
+                && selfPermissionGranted(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                && selfPermissionGranted(Manifest.permission.READ_EXTERNAL_STORAGE);
+    }
+
+    /**
+     * api级别权限查询
+     * @param permission
+     * @return
+     */
+    private boolean selfPermissionGranted(String permission) {
+        return  PermissionChecker.checkSelfPermission(this, permission) == PermissionChecker.PERMISSION_GRANTED;
+    }
+
+    /**
+     *
+     * 麦克风	RECORD_AUDIO  危险	麦克风的使用
+     * @return
+     */
+    public boolean checkAudioPermission(){
+        try {
+            AudioManager audioManager = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
+            // 无用操作
+            audioManager.getMode();
+        }catch (Exception e){
+            return false;
+        }
+        return selfPermissionGranted(Manifest.permission.RECORD_AUDIO);
     }
 
     //申请权限
     private void requestPermission(){
         if(Build.VERSION.SDK_INT >= 23){
-            if(!checkPermission()){
+            if(!checkAudioPermission()){
                 List<String> needRequestPermissionList = new ArrayList<>();
                 for (String permission : PERMISSIONS) {
                     if (PermissionChecker.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED
