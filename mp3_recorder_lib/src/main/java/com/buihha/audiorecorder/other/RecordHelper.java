@@ -118,7 +118,7 @@ public class RecordHelper {
     }
 
     public void stop() {
-        if (state == RecordState.IDLE) {
+        if (state == RecordState.IDLE || state == RecordState.ERROR) {
             Logger.e(TAG, "状态异常当前状态： %s", state.name());
             return;
         }
