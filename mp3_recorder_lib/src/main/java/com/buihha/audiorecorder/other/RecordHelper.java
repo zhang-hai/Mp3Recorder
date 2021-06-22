@@ -98,6 +98,7 @@ public class RecordHelper {
         if(config == null){
             config = new RecordConfig();
         }
+        this.mBeginStart = false;
         this.currentConfig = config;
         if (state != RecordState.IDLE && state != RecordState.STOP) {
             Logger.e(TAG, "状态异常当前状态： %s", state.name());
