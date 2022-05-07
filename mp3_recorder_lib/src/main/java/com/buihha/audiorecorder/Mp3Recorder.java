@@ -3,7 +3,6 @@ package com.buihha.audiorecorder;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
-import android.os.Message;
 import android.util.Log;
 
 import com.buihha.audiorecorder.other.RecordConfig;
