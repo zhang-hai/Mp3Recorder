@@ -1,6 +1,7 @@
 package com.buihha.audiorecorder.other;
 
 import com.buihha.audiorecorder.SimpleLame;
+import com.buihha.audiorecorder.other.listener.RecordDataListener;
 import com.buihha.audiorecorder.other.utils.Logger;
 
 import java.io.File;
@@ -20,7 +21,9 @@ public class Mp3EncodeThread extends Thread {
     private File file;
     private FileOutputStream os;
     private byte[] mp3Buffer;
-    private EncordFinishListener encordFinishListener;
+    private EncodeFinishListener encodeFinishListener;
+
+    private RecordDataListener dataListener;
 
     /**
      * 是否已停止录音
@@ -32,10 +35,13 @@ public class Mp3EncodeThread extends Thread {
      */
     private volatile boolean start = true;
 
+    private RecordConfig currentConfig;
+
     public Mp3EncodeThread(File file, int bufferSize) {
         this.file = file;
         mp3Buffer = new byte[(int) (7200 + (bufferSize * 2 * 1.25))];
-        RecordConfig currentConfig = RecordHelper.getInstance().getCurrentConfig();
+        currentConfig = RecordHelper.getInstance().getCurrentConfig();
+        dataListener = RecordHelper.getInstance().getRecordDataListener();
         int sampleRate = currentConfig.getSampleRate();
 
         Logger.w(TAG, "in_sampleRate:%s，getChannelCount:%s ，out_sampleRate：%s 位宽： %s,",
@@ -45,11 +51,13 @@ public class Mp3EncodeThread extends Thread {
 
     @Override
     public void run() {
-        try {
-            this.os = new FileOutputStream(file);
-        } catch (FileNotFoundException e) {
-            Logger.e(e, TAG, e.getMessage());
-            return;
+        if (currentConfig.isSaveToFile()){
+            try {
+                this.os = new FileOutputStream(file);
+            } catch (FileNotFoundException e) {
+                Logger.e(e, TAG, e.getMessage());
+                return;
+            }
         }
 
         while (start) {
@@ -68,8 +76,12 @@ public class Mp3EncodeThread extends Thread {
         }
     }
 
-    public void stopSafe(EncordFinishListener encordFinishListener) {
-        this.encordFinishListener = encordFinishListener;
+    public void setEncodeFinishListener(EncodeFinishListener listener){
+        this.encodeFinishListener = listener;
+    }
+
+    //安全停止
+    public void stopSafe() {
         isOver = true;
         synchronized (this) {
             notify();
@@ -106,28 +118,41 @@ public class Mp3EncodeThread extends Thread {
             if (encodedSize < 0) {
                 Logger.e(TAG, "Lame encoded size: " + encodedSize);
             }
-            try {
-                os.write(mp3Buffer, 0, encodedSize);
-            } catch (IOException e) {
-                Logger.e(e, TAG, "Unable to write to file");
+//            notifyBufferData(mp3Buffer);
+            if (this.currentConfig.isSaveToFile()){
+                try {
+                    os.write(mp3Buffer, 0, encodedSize);
+                } catch (IOException e) {
+                    Logger.e(e, TAG, "Unable to write to file");
+                }
             }
+        }
+    }
+
+    private void notifyBufferData(byte[] data){
+        if (dataListener != null){
+            dataListener.onData(data);
         }
     }
 
     private void finish() {
         start = false;
         final int flushResult = SimpleLame.flush(mp3Buffer);
-        if (flushResult > 0) {
+//        notifyBufferData(mp3Buffer);
+        if (currentConfig.isSaveToFile()){
             try {
-                os.write(mp3Buffer, 0, flushResult);
+                if (flushResult > 0) {
+                    os.write(mp3Buffer, 0, flushResult);
+                }
                 os.close();
             } catch (final IOException e) {
                 Logger.e(TAG, e.getMessage());
             }
+            Logger.d(TAG, "转换结束 :%s", file.length());
         }
-        Logger.d(TAG, "转换结束 :%s", file.length());
-        if (encordFinishListener != null) {
-            encordFinishListener.onFinish();
+
+        if (encodeFinishListener != null) {
+            encodeFinishListener.onFinish();
         }
     }
 
@@ -149,7 +174,7 @@ public class Mp3EncodeThread extends Thread {
         }
     }
 
-    public interface EncordFinishListener {
+    public interface EncodeFinishListener {
         /**
          * 格式转换完毕
          */

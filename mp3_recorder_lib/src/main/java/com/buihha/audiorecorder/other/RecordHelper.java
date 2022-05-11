@@ -78,8 +78,12 @@ public class RecordHelper {
         this.recordStateListener = recordStateListener;
     }
 
-    void setRecordDataListener(RecordDataListener recordDataListener) {
+    public void setRecordDataListener(RecordDataListener recordDataListener) {
         this.recordDataListener = recordDataListener;
+    }
+
+    public RecordDataListener getRecordDataListener(){
+        return this.recordDataListener;
     }
 
     public void setRecordSoundSizeListener(RecordSoundSizeListener recordSoundSizeListener) {
@@ -183,7 +187,6 @@ public class RecordHelper {
     }
 
     private void notifyFinish() {
-        Logger.d(TAG, "录音结束 file: %s", resultFile.getAbsolutePath());
         //若是错误的state则直接返回
         if (state == RecordState.ERROR){
             state = RecordState.IDLE;
@@ -223,7 +226,7 @@ public class RecordHelper {
         mainHandler.post(new Runnable() {
             @Override
             public void run() {
-                if (recordDataListener != null) {
+                if (recordDataListener != null/* && currentConfig.getFormat() != RecordConfig.RecordFormat.MP3*/) {
                     recordDataListener.onData(data);
                 }
 
@@ -258,6 +261,10 @@ public class RecordHelper {
     private void initMp3EncoderThread(int bufferSize) {
         try {
             mp3EncodeThread = new Mp3EncodeThread(resultFile, bufferSize);
+            mp3EncodeThread.setEncodeFinishListener(() -> {
+                notifyFinish();
+                mp3EncodeThread = null;
+            });
             mp3EncodeThread.start();
         } catch (Exception e) {
             Logger.e(e, TAG, e.getMessage());
@@ -303,7 +310,9 @@ public class RecordHelper {
             Logger.d(TAG, "开始录制 Pcm");
             FileOutputStream fos = null;
             try {
-                fos = new FileOutputStream(tmpFile);
+                if (currentConfig.isSaveToFile()){
+                    fos = new FileOutputStream(tmpFile);
+                }
                 audioRecord.startRecording();
                 byte[] byteBuffer = new byte[bufferSize];
 
@@ -317,8 +326,10 @@ public class RecordHelper {
                         }
                         //处理后续逻辑
                         notifyData(byteBuffer);
-                        fos.write(byteBuffer, 0, end);
-                        fos.flush();
+                        if (currentConfig.isSaveToFile()){
+                            fos.write(byteBuffer, 0, end);
+                            fos.flush();
+                        }
                     }else {
                         state = RecordState.ERROR;
                         break;
@@ -404,34 +415,31 @@ public class RecordHelper {
 
     private void stopMp3Encoded() {
         if (mp3EncodeThread != null) {
-            mp3EncodeThread.stopSafe(new Mp3EncodeThread.EncordFinishListener() {
-                @Override
-                public void onFinish() {
-                    notifyFinish();
-                    mp3EncodeThread = null;
-                }
-            });
+            mp3EncodeThread.stopSafe();
         } else {
             Logger.e(TAG, "mp3EncodeThread is null, 代码业务流程有误，请检查！！ ");
         }
     }
 
     private void makeFile() {
-        switch (currentConfig.getFormat()) {
-            case MP3:
-                return;
-            case WAV:
-                mergePcmFile();
-                makeWav();
-                break;
-            case PCM:
-                mergePcmFile();
-                break;
-            default:
-                break;
+        if (currentConfig.isSaveToFile()){
+            switch (currentConfig.getFormat()) {
+                case MP3:
+                    return;
+                case WAV:
+                    mergePcmFile();
+                    makeWav();
+                    break;
+                case PCM:
+                    mergePcmFile();
+                    break;
+                default:
+                    break;
+            }
         }
+
         notifyFinish();
-        Logger.i(TAG, "录音完成！ path: %s ； 大小：%s", resultFile.getAbsoluteFile(), resultFile.length());
+        Logger.i(TAG, "录音完成！ path: %s ； 大小：%s", resultFile==null?"":resultFile.getAbsoluteFile(), resultFile==null?"":resultFile.length());
     }
 
     /**

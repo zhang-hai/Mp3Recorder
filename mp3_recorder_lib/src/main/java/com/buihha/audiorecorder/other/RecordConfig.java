@@ -11,7 +11,7 @@ import java.util.Locale;
  */
 public class RecordConfig implements Serializable {
     /**
-     * 录音格式 默认WAV格式
+     * 录音格式 默认MP3格式
      */
     private RecordFormat format = RecordFormat.MP3;
     /**
@@ -28,6 +28,9 @@ public class RecordConfig implements Serializable {
      * 采样率
      */
     private int sampleRate = 16000;
+
+    //是否需要将音频输出为文件
+    private boolean saveToFile = true;
 
     /*
         * 录音文件存放路径，默认sdcard/Record
@@ -60,6 +63,15 @@ public class RecordConfig implements Serializable {
         this.sampleRate = sampleRate;
     }
 
+    public static RecordConfig getDefaultConfig(){
+        RecordConfig config = new RecordConfig();
+        config.sampleRate = 16000;
+        config.channelConfig = AudioFormat.CHANNEL_IN_MONO;
+        config.format = RecordFormat.MP3;
+        config.encodingConfig = AudioFormat.ENCODING_PCM_16BIT;
+        config.saveToFile = true;
+        return config;
+    }
 
     public String getRecordDir() {
         return recordDir;
@@ -159,6 +171,14 @@ public class RecordConfig implements Serializable {
         return this;
     }
 
+    public boolean isSaveToFile() {
+        return saveToFile;
+    }
+
+    public RecordConfig setSaveToFile(boolean saveToFile) {
+        this.saveToFile = saveToFile;
+        return this;
+    }
 
     @Override
     public String toString() {
