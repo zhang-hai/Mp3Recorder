@@ -7,10 +7,12 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -19,7 +21,10 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.PermissionChecker;
 
 import com.buihha.audiorecorder.Mp3Recorder;
+import com.buihha.audiorecorder.other.RecordConfig;
+import com.buihha.audiorecorder.other.listener.RecordDataListener;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,11 +48,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private String mMp3Path;
 
+    private AudioTrackManager audioTrackManager;
 
-
-    private final String[] PERMISSIONS = {Manifest.permission.RECORD_AUDIO,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE,
-            Manifest.permission.READ_EXTERNAL_STORAGE};
+    private final String[] PERMISSIONS = {Manifest.permission.RECORD_AUDIO};
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -66,6 +69,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         btn_recorder.setOnClickListener(this);
         btn_play.setOnClickListener(this);
+
+        audioTrackManager = new AudioTrackManager();
     }
 
     @Override
@@ -74,9 +79,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             if(!isPlaying){//没在播放
                 if(!isRecording){//开启录音
                     startRecord();
+
+//                    audioTrackManager.start();
+
                     btn_recorder.setText("停止录音");
                 }else {
                     stopRecord();
+
+//                    audioTrackManager.stopPlay();
+
                     btn_recorder.setText("开始录音");
                 }
                 isRecording = !isRecording;
@@ -84,6 +95,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }else if(v.getId() == R.id.btn_play){
             if(!isRecording){
                 if(!isPlaying){
+                    if (TextUtils.isEmpty(mMp3Path) || !new File(mMp3Path).exists()){
+                        Toast.makeText(this,"文件不存在",Toast.LENGTH_SHORT).show();
+                        return;
+                    }
                     startPlay();
                     btn_play.setText("停止播放");
                 }else {
@@ -98,7 +113,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     //开始录音
     private void startRecord(){
         if (mRecorder == null) {
-            mRecorder = new Mp3Recorder();
+            //方式一：需要自定义配置，可使用该方式
+            RecordConfig config = RecordConfig.getDefaultConfig();
+            mRecorder = new Mp3Recorder(config);
+            //方法二：采用默认配置
+            //mRecorder = new Mp3Recorder();
             mRecorder.setOnRecordListener(new Mp3Recorder.OnRecordListener() {
                 @Override
                 public void onStart() {
@@ -130,13 +149,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     Log.d("MainActivity","采样:"+i+"Hz   音量:"+v+"分贝");
                 }
             });
+
+            //新增 监听录音PCM数据，需要时可以注册该监听器（这里做了获取到数据采用AudioTrack进行实时播放的示例）
+            mRecorder.setOnRecordDataListener(new RecordDataListener() {
+                @Override
+                public void onData(byte[] data) {
+                    Log.d("MainActivity","实时数据长度：" + data.length);
+//                    audioTrackManager.write(data);
+                }
+            });
         }
-        if (!mRecorder.isRecording())
+        if (!mRecorder.isRecording()){
             try {
-                mRecorder.startRecording("/sdcard/"+getPackageName(),"record.mp3");
-            } catch (IOException e) {
+                mRecorder.startRecording(getExternalFilesDir("").getAbsolutePath(), "record.mp3");
+            } catch (Exception e) {
                 e.printStackTrace();
             }
+        }
     }
 
     //停止录音
@@ -191,9 +220,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     //检查是否有相应权限
     private boolean checkPermission(){
-        return selfPermissionGranted(Manifest.permission.RECORD_AUDIO)
-                && selfPermissionGranted(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                && selfPermissionGranted(Manifest.permission.READ_EXTERNAL_STORAGE);
+        return selfPermissionGranted(Manifest.permission.RECORD_AUDIO);
     }
 
     /**
@@ -227,7 +254,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             if(!checkAudioPermission()){
                 List<String> needRequestPermissionList = new ArrayList<>();
                 for (String permission : PERMISSIONS) {
-                    if (PermissionChecker.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED
+                    if (PermissionChecker.checkSelfPermission(this, permission) != PermissionChecker.PERMISSION_GRANTED
                             || ActivityCompat.shouldShowRequestPermissionRationale(this, permission)) {
                         needRequestPermissionList.add(permission);
                     }
