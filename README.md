@@ -20,7 +20,7 @@ allprojects {
 
 ```groovy
 dependencies {
-        implementation 'com.github.zhang-hai:Mp3Recorder:1.0.11'
+        implementation 'com.github.zhang-hai:Mp3Recorder:1.1.3'
 }
 ```
 
@@ -101,7 +101,7 @@ v1.0.9 修复转码读取pcm数据未对short转化成byte进行转换，造成�
 
 v1.0.10 开启录音时，提前把mp3File对象构造出来
 
-v1.0.11 
+v1.1.3 
 
 - 新增`setOnRecordDataListener(RecordDataListener listener)`用于监听实时录音的PCM数据；
 - 在`RecordConfig`中新增`saveToFile`变量，用于标识是否保存录音文件，默认true；
