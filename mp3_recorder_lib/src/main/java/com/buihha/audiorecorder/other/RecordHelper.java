@@ -234,7 +234,7 @@ public class RecordHelper {
                     byte[] fftData = fftFactory.makeFftData(data);
                     if (fftData != null) {
                         if (recordSoundSizeListener != null) {
-                            recordSoundSizeListener.onSoundSize(getDb(fftData));
+                            recordSoundSizeListener.onSoundSize(getDb(data));
                         }
                         if (recordFftDataListener != null) {
                             recordFftDataListener.onFftData(fftData);
@@ -245,17 +245,42 @@ public class RecordHelper {
         });
     }
 
+    /**
+     * 公式：Lp = 20 * log10(Prms/Pref) db
+     * Prms:当前声音的振幅值
+     * Pref:声音总的振幅最大值
+     *
+     * @param data
+     * @return
+     */
     private int getDb(byte[] data) {
-        double sum = 0;
-        double ave;
-        int length = data.length > 128 ? 128 : data.length;
-        int offsetStart = 8;
-        for (int i = offsetStart; i < length; i++) {
-            sum += data[i];
+        double sumVolume = 0.0;
+        double avgVolume = 0.0;
+        double volume = 0.0;
+        for(int i = 0; i < data.length; i+=2){
+            //将byte转为short
+            int v1 = data[i] & 0xFF;
+            int v2 = data[i + 1] & 0xFF;
+            int temp = v1 | (v2 << 8);// 小端
+            if (temp >= 0x8000) {
+                temp = 0xffff - temp;
+            }
+            sumVolume += Math.abs(temp);
         }
-        ave = (sum / (length - offsetStart)) * 65536 / 128f;
-        int i = (int) (Math.log10(ave) * 20);
-        return i < 0 ? 27 : i;
+        avgVolume = sumVolume / (data.length >> 1);
+        volume = Math.log10(avgVolume) * 20;
+        return (int) volume;
+
+//        double sum = 0;
+//        double ave;
+//        int length = data.length > 128 ? 128 : data.length;
+//        int offsetStart = 8;
+//        for (int i = offsetStart; i < length; i++) {
+//            sum += data[i];
+//        }
+//        ave = (sum / (length - offsetStart)) * 65536 / 128f;
+//        int i = (int) (Math.log10(ave) * 20);
+//        return i < 0 ? 27 : i;
     }
 
     private void initMp3EncoderThread(int bufferSize) {

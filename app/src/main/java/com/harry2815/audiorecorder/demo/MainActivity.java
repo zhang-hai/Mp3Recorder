@@ -147,6 +147,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 @Override
                 public void onRecording(int i, double v) {
                     Log.d("MainActivity","采样:"+i+"Hz   音量:"+v+"分贝");
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            tv_filepath.setText("音量:"+v+"分贝");
+                        }
+                    });
                 }
             });
 
