@@ -20,7 +20,7 @@ allprojects {
 
 ```groovy
 dependencies {
-        implementation 'com.github.zhang-hai:Mp3Recorder:1.1.3'
+        implementation 'com.github.zhang-hai:Mp3Recorder:1.1.4'
 }
 ```
 
@@ -91,20 +91,30 @@ if (mRecorder!=null && mRecorder.isRecording()){
 ```
 
 #### 版本更新
-v1.0.5 设置默认音频采样率未44100Hz,因为Android要求所有设备都要支持该采样率，其他采样率不一定。
+v1.0.5 
+
+- 设置默认音频采样率未44100Hz,因为Android要求所有设备都要支持该采样率，其他采样率不一定。
 
 v1.0.7
 
-v1.0.8 修改初始化AudioRecord对象是参数AudioSource类型，解决录音文件有噪音的问题;
+v1.0.8 
 
-v1.0.9 修复转码读取pcm数据未对short转化成byte进行转换，造成出现音频中偶尔刺啦声问题；
+- 修改初始化AudioRecord对象是参数AudioSource类型，解决录音文件有噪音的问题;
 
-v1.0.10 开启录音时，提前把mp3File对象构造出来
+v1.0.9 
+
+- 修复转码读取pcm数据未对short转化成byte进行转换，造成出现音频中偶尔刺啦声问题；
+
+v1.0.10 
+
+- 开启录音时，提前把mp3File对象构造出来
 
 v1.1.3 
 
 - 新增`setOnRecordDataListener(RecordDataListener listener)`用于监听实时录音的PCM数据；
 - 在`RecordConfig`中新增`saveToFile`变量，用于标识是否保存录音文件，默认true；
 
+v1.1.4 
 
+- 修复录音时计算的分贝不正确问题
 
