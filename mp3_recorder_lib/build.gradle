@@ -3,14 +3,14 @@ apply plugin: 'com.github.dcendents.android-maven' // ADD THIS
 group='com.github.zhang-hai'
 
 android {
-    compileSdkVersion 29
+    compileSdkVersion Integer.parseInt(COMPILE_SDK_VERSION)
 
 
     defaultConfig {
-        minSdkVersion 14
-        targetSdkVersion 29
-        versionCode 1
-        versionName "1.0"
+        minSdkVersion Integer.parseInt(MIN_SDK_VERSION)
+        targetSdkVersion Integer.parseInt(TARGET_SDK_VERSION)
+        versionCode Integer.parseInt(VERSION_CODE)
+        versionName VERSION_NAME
 
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
 

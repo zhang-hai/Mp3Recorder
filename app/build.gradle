@@ -1,15 +1,16 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 29
+    compileSdkVersion Integer.parseInt(COMPILE_SDK_VERSION)
+
 
     defaultConfig {
-        applicationId "com.harry2815.audiorecorder.demo"
-        minSdkVersion 14
-        targetSdkVersion 29
-        versionCode 1
-        versionName "1.0"
+        minSdkVersion Integer.parseInt(MIN_SDK_VERSION)
+        targetSdkVersion Integer.parseInt(TARGET_SDK_VERSION)
+        versionCode Integer.parseInt(VERSION_CODE)
+        versionName VERSION_NAME
 
+        applicationId "com.harry2815.audiorecorder.demo"
     }
 
     buildTypes {
